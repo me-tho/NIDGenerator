@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>জাতীয় পরিচয় পত্র - SVG PDF জেনারেটর</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;600;700&family=Tiro+Bangla:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- jsPDF & html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary-green: #006a4e;
+            --navy-blue: #005088;
+            --cream-bg: #f7f2e9;
+            --text-dark: #1a1a2e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background: linear-gradient(135deg, #e8ecf1 0%, #d4dce8 100%);
+            padding: 25px 15px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--navy-blue);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+        }
+
+        /* ===== ফর্ম সেকশন ===== */
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            height: fit-content;
+        }
+
+        .form-section h2 {
+            font-size: 16px;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 3px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 8px 10px;
+            border: 1.5px solid #d1d9e6;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: 'Hind Siliguri', sans-serif;
+            background: #f9fbfd;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 2px rgba(0, 106, 78, 0.1);
+            background: white;
+        }
+
+        .file-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .file-group input[type="file"] {
+            flex: 1;
+            padding: 6px 8px;
+            border: 2px dashed #b3c2d6;
+            border-radius: 5px;
+            background: #f8fafc;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .file-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #999;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .file-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .btn-download {
+            grid-column: 1 / -1;
+            background: var(--primary-green);
+            color: white;
+            padding: 11px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Hind Siliguri', sans-serif;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 3px 10px rgba(0, 106, 78, 0.25);
+        }
+
+        .btn-download:hover {
+            background: #00563e;
+            transform: translateY(-1px);
+        }
+
+        /* ===== প্রিভিউ সেকশন ===== */
+        .preview-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .preview-section h2 {
+            font-size: 16px;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+            font-weight: 700;
+            width: 100%;
+        }
+
+        #nid-card-svg {
+            width: 100%;
+            max-width: 900px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .note {
+            font-size: 11px;
+            color: #999;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        /* ===== রেসপন্সিভ ===== */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 0 10px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .form-section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- হেডার -->
+        <div class="header">
+            <h1>🇧🇩 জাতীয় পরিচয় পত্র</h1>
+            <p>National Identity Card - SVG PDF জেনারেটর</p>
+        </div>
+
+        <div class="main-content">
+            <!-- ===== ফর্ম সেকশন ===== -->
+            <div class="form-section">
+                <h2>📝 তথ্য পূরণ করুন</h2>
+                <div class="form-grid">
+                    <!-- নাম -->
+                    <div class="form-group">
+                        <label>নাম (বাংলা)</label>
+                        <input type="text" id="nameBn" placeholder="মাহফুজ আলী" oninput="updateSVG()">
+                    </div>
+                    <div class="form-group">
+                        <label>Name (English)</label>
+                        <input type="text" id="nameEn" placeholder="MAHFUZ ALI" oninput="updateSVG()">
+                    </div>
+
+                    <!-- পিতা -->
+                    <div class="form-group">
+                        <label>পিতা (বাংলা)</label>
+                        <input type="text" id="fatherBn" placeholder="আলীম উদ্দীন" oninput="updateSVG()">
+                    </div>
+                    <div class="form-group">
+                        <label>Father (English)</label>
+                        <input type="text" id="fatherEn" placeholder="ALIM UDDIN" oninput="updateSVG()">
+                    </div>
+
+                    <!-- মাতা -->
+                    <div class="form-group">
+                        <label>মাতা (বাংলা)</label>
+                        <input type="text" id="motherBn" placeholder="ময়না খাতু��" oninput="updateSVG()">
+                    </div>
+                    <div class="form-group">
+                        <label>Mother (English)</label>
+                        <input type="text" id="motherEn" placeholder="MOYNA KHATUN" oninput="updateSVG()">
+                    </div>
+
+                    <!-- জন্ম তারিখ -->
+                    <div class="form-group">
+                        <label>জন্ম তারিখ</label>
+                        <input type="date" id="dob" oninput="updateSVG()">
+                    </div>
+
+                    <!-- আইডি নং -->
+                    <div class="form-group">
+                        <label>আইডি নং</label>
+                        <input type="text" id="idNo" placeholder="4654113754" oninput="updateSVG()">
+                    </div>
+
+                    <!-- রক্তের গ্রুপ -->
+                    <div class="form-group">
+                        <label>রক্তের গ্রুপ</label>
+                        <select id="bloodGroup" oninput="updateSVG()">
+                            <option value="">নির্বাচন করুন</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+
+                    <!-- জন্মস্থান -->
+                    <div class="form-group">
+                        <label>জন্মস্থান</label>
+                        <input type="text" id="birthplace" placeholder="ঝিনাইদহ" oninput="updateSVG()">
+                    </div>
+
+                    <!-- ঠিকানা -->
+                    <div class="form-group">
+                        <label>ঠিকানা (বাংলা)</label>
+                        <input type="text" id="address" placeholder="কুমপুর, রিশখালী" oninput="updateSVG()">
+                    </div>
+
+                    <!-- প্রদানের তারিখ -->
+                    <div class="form-group">
+                        <label>প্রদানের তারিখ</label>
+                        <input type="date" id="issueDate" oninput="updateSVG()">
+                    </div>
+
+                    <!-- ছবি -->
+                    <div class="form-group">
+                        <label>ছবি (30×36mm)</label>
+                        <div class="file-group">
+                            <input type="file" id="photoFile" accept="image/*" onchange="handlePhoto(event)">
+                            <div class="file-preview" id="photoPreview">📷</div>
+                        </div>
+                    </div>
+
+                    <!-- স্বাক্ষর -->
+                    <div class="form-group">
+                        <label>স্বাক্ষর (300×80px)</label>
+                        <div class="file-group">
+                            <input type="file" id="signatureFile" accept="image/*" onchange="handleSignature(event)">
+                            <div class="file-preview" id="signaturePreview">✍️</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-download" onclick="downloadPDF()">
+                        📥 PDF ডাউনলোড করুন
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== প্রিভিউ সেকশন ===== -->
+            <div class="preview-section">
+                <h2>👁️ লাইভ প্রিভিউ</h2>
+                <svg id="nid-card-svg" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+                    <!-- ব্যাকগ্রাউন্ড -->
+                    <rect width="1000" height="600" fill="#f7f2e9"/>
+                    
+                    <!-- মূল বর্ডার -->
+                    <rect x="20" y="20" width="960" height="560" fill="none" stroke="#006a4e" stroke-width="6" rx="10"/>
+                    
+                    <!-- ইনার বর্ডার -->
+                    <rect x="32" y="32" width="936" height="536" fill="none" stroke="rgba(0, 106, 78, 0.2)" stroke-width="2" rx="8"/>
+
+                    <!-- হেডার -->
+                    <text x="500" y="75" font-family="'Hind Siliguri', sans-serif" font-size="16" font-weight="700" text-anchor="middle" fill="#1a1a2e">
+                        🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার
+                    </text>
+                    <text x="500" y="95" font-family="'Hind Siliguri', sans-serif" font-size="11" text-anchor="middle" fill="#666" letter-spacing="1">
+                        GOVERNMENT OF THE PEOPLE'S REPUBLIC OF BANGLADESH
+                    </text>
+
+                    <!-- টাইটেল -->
+                    <text x="500" y="140" font-family="'Tiro Bangla', serif" font-size="48" font-weight="700" text-anchor="middle" fill="#005088" letter-spacing="2">
+                        জাতীয় পরিচয় পত্র
+                    </text>
+                    <text x="500" y="165" font-family="'Hind Siliguri', sans-serif" font-size="14" text-anchor="middle" fill="#555" letter-spacing="2">
+                        NATIONAL IDENTITY CARD
+                    </text>
+
+                    <!-- আন্ডারলাইন -->
+                    <line x1="400" y1="175" x2="600" y2="175" stroke="#006a4e" stroke-width="2"/>
+
+                    <!-- তথ্য সেকশন -->
+                    <!-- নাম -->
+                    <text x="70" y="220" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="700" fill="#1a1a2e">নাম</text>
+                    <text x="120" y="220" font-family="'Hind Siliguri', sans-serif" font-size="10" fill="#999">Name</text>
+                    <text x="280" y="220" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="600" fill="#0b2b3d" id="svgNameBn">_________</text>
+                    <text x="600" y="220" font-family="'Hind Siliguri', sans-serif" font-size="11" fill="#333" id="svgNameEn">_________</text>
+                    <line x1="70" y1="228" x2="930" y2="228" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+                    <!-- পিতা -->
+                    <text x="70" y="255" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="700" fill="#1a1a2e">পিতা</text>
+                    <text x="120" y="255" font-family="'Hind Siliguri', sans-serif" font-size="10" fill="#999">Father</text>
+                    <text x="280" y="255" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="600" fill="#0b2b3d" id="svgFatherBn">_________</text>
+                    <text x="600" y="255" font-family="'Hind Siliguri', sans-serif" font-size="11" fill="#333" id="svgFatherEn">_________</text>
+                    <line x1="70" y1="263" x2="930" y2="263" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+                    <!-- মাতা -->
+                    <text x="70" y="290" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="700" fill="#1a1a2e">মাতা</text>
+                    <text x="120" y="290" font-family="'Hind Siliguri', sans-serif" font-size="10" fill="#999">Mother</text>
+                    <text x="280" y="290" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="600" fill="#0b2b3d" id="svgMotherBn">_________</text>
+                    <text x="600" y="290" font-family="'Hind Siliguri', sans-serif" font-size="11" fill="#333" id="svgMotherEn">_________</text>
+                    <line x1="70" y1="298" x2="930" y2="298" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+                    <!-- জন্ম তারিখ -->
+                    <text x="70" y="325" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="700" fill="#1a1a2e">জন্ম তারিখ</text>
+                    <text x="170" y="325" font-family="'Hind Siliguri', sans-serif" font-size="10" fill="#999">DOB</text>
+                    <text x="280" y="325" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="600" fill="#0b2b3d" id="svgDobBn">—</text>
+                    <text x="600" y="325" font-family="'Hind Siliguri', sans-serif" font-size="11" fill="#333" id="svgDobEn">—</text>
+                    <line x1="70" y1="333" x2="930" y2="333" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+                    <!-- জন্মস্থান -->
+                    <text x="70" y="360" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="700" fill="#1a1a2e">জন্মস্থান</text>
+                    <text x="165" y="360" font-family="'Hind Siliguri', sans-serif" font-size="10" fill="#999">Birthplace</text>
+                    <text x="280" y="360" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="600" fill="#0b2b3d" id="svgBirthplace">_________</text>
+                    <line x1="70" y1="368" x2="930" y2="368" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+                    <!-- রক্তের গ্রুপ -->
+                    <text x="70" y="395" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="700" fill="#1a1a2e">রক্তের গ্রুপ</text>
+                    <text x="190" y="395" font-family="'Hind Siliguri', sans-serif" font-size="10" fill="#999">Blood</text>
+                    <text x="280" y="395" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="600" fill="#0b2b3d" id="svgBlood">—</text>
+                    <line x1="70" y1="403" x2="930" y2="403" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+                    <!-- ঠিকানা -->
+                    <text x="70" y="430" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="700" fill="#1a1a2e">ঠিকানা</text>
+                    <text x="140" y="430" font-family="'Hind Siliguri', sans-serif" font-size="10" fill="#999">Address</text>
+                    <text x="280" y="430" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="600" fill="#0b2b3d" id="svgAddress">_________</text>
+                    <line x1="70" y1="438" x2="930" y2="438" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+                    <!-- প্রদানের তারিখ -->
+                    <text x="70" y="465" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="700" fill="#1a1a2e">প্রদানের তারিখ</text>
+                    <text x="195" y="465" font-family="'Hind Siliguri', sans-serif" font-size="10" fill="#999">Issue Date</text>
+                    <text x="280" y="465" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="600" fill="#0b2b3d" id="svgIssueBn">—</text>
+                    <text x="600" y="465" font-family="'Hind Siliguri', sans-serif" font-size="11" fill="#333" id="svgIssueEn">—</text>
+                    <line x1="70" y1="473" x2="930" y2="473" stroke="#ddd" stroke-width="1" stroke-dasharray="3,3"/>
+
+                    <!-- আইডি নম্বর (বড়) -->
+                    <rect x="70" y="485" width="860" height="50" fill="rgba(0, 106, 78, 0.05)" stroke="#006a4e" stroke-width="2" rx="4"/>
+                    <text x="80" y="512" font-family="'Hind Siliguri', sans-serif" font-size="13" font-weight="700" fill="#1a1a2e">আইডি নং / ID NO</text>
+                    <text x="420" y="512" font-family="'Courier New', monospace" font-size="20" font-weight="700" fill="#005088" letter-spacing="2" id="svgIdNo">__________</text>
+
+                    <!-- ফটো এলাকা -->
+                    <g id="photoGroup">
+                        <rect x="820" y="200" width="110" height="130" fill="#eee" stroke="#333" stroke-width="2" rx="3"/>
+                        <text x="875" y="270" font-family="'Hind Siliguri', sans-serif" font-size="10" text-anchor="middle" fill="#aaa" id="photoPlaceholder">📷</text>
+                        <image id="photoImage" x="820" y="200" width="110" height="130" preserveAspectRatio="xMidYMid slice" style="display:none;"/>
+                    </g>
+                    <text x="875" y="345" font-family="'Hind Siliguri', sans-serif" font-size="10" font-weight="600" text-anchor="middle" fill="#333">ছবি/Photo</text>
+
+                    <!-- স্বাক্ষর এলাকা -->
+                    <g id="signatureGroup">
+                        <text x="820" y="380" font-family="'Hind Siliguri', sans-serif" font-size="10" font-weight="600" fill="#1a1a2e">স্বাক্ষর</text>
+                        <line x1="820" y1="395" x2="930" y2="395" stroke="#333" stroke-width="1.5"/>
+                        <text x="875" y="392" font-family="'Hind Siliguri', sans-serif" font-size="10" text-anchor="middle" fill="#aaa" id="signaturePlaceholder">✍️</text>
+                        <image id="signatureImage" x="820" y="365" width="110" height="35" preserveAspectRatio="xMidYMid slice" style="display:none;"/>
+                    </g>
+                </svg>
+                <p class="note">✓ সব ডেটা লোকালিতে প্রসেস হয় - কোন সার্ভারে যায় না</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let photoDataURL = null;
+        let signatureDataURL = null;
+
+        // ফটো হ্যান্ডেল
+        function handlePhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                photoDataURL = e.target.result;
+                document.getElementById('photoPreview').innerHTML = `<img src="${photoDataURL}" alt="">`;
+                updateSVG();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // স্বাক্ষর হ্যান্ডেল
+        function handleSignature(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                signatureDataURL = e.target.result;
+                document.getElementById('signaturePreview').innerHTML = `<img src="${signatureDataURL}" alt="">`;
+                updateSVG();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // তারিখ ফরম্যাট (বাংলা)
+        function formatDateBn(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr + 'T00:00:00');
+            if (isNaN(d.getTime())) return '—';
+
+            const months = ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+                'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+            const day = d.getDate();
+            const month = months[d.getMonth()];
+            const year = d.getFullYear();
+
+            return `${day} ${month} ${year}`;
+        }
+
+        // তারিখ ফরম্যাট (ইংরেজি)
+        function formatDateEn(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr + 'T00:00:00');
+            if (isNaN(d.getTime())) return '—';
+
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = months[d.getMonth()];
+            const year = d.getFullYear();
+
+            return `${day} ${month} ${year}`;
+        }
+
+        // SVG আপডেট
+        function updateSVG() {
+            const nameBn = document.getElementById('nameBn').value || '_________';
+            const nameEn = document.getElementById('nameEn').value || '_________';
+            const fatherBn = document.getElementById('fatherBn').value || '_________';
+            const fatherEn = document.getElementById('fatherEn').value || '_________';
+            const motherBn = document.getElementById('motherBn').value || '_________';
+            const motherEn = document.getElementById('motherEn').value || '_________';
+            const dob = document.getElementById('dob').value;
+            const idNo = document.getElementById('idNo').value || '__________';
+            const bloodGroup = document.getElementById('bloodGroup').value || '—';
+            const birthplace = document.getElementById('birthplace').value || '_________';
+            const address = document.getElementById('address').value || '_________';
+            const issueDate = document.getElementById('issueDate').value;
+
+            // টেক্সট আপডেট
+            document.getElementById('svgNameBn').textContent = nameBn;
+            document.getElementById('svgNameEn').textContent = nameEn;
+            document.getElementById('svgFatherBn').textContent = fatherBn;
+            document.getElementById('svgFatherEn').textContent = fatherEn;
+            document.getElementById('svgMotherBn').textContent = motherBn;
+            document.getElementById('svgMotherEn').textContent = motherEn;
+            document.getElementById('svgDobBn').textContent = formatDateBn(dob);
+            document.getElementById('svgDobEn').textContent = formatDateEn(dob);
+            document.getElementById('svgBirthplace').textContent = birthplace;
+            document.getElementById('svgBlood').textContent = bloodGroup;
+            document.getElementById('svgAddress').textContent = address;
+            document.getElementById('svgIssueBn').textContent = formatDateBn(issueDate);
+            document.getElementById('svgIssueEn').textContent = formatDateEn(issueDate);
+            document.getElementById('svgIdNo').textContent = idNo;
+
+            // ফটো আপডেট
+            if (photoDataURL) {
+                document.getElementById('photoImage').setAttributeNS('http://www.w3.org/1999/xlink', 'href', photoDataURL);
+                document.getElementById('photoImage').style.display = 'block';
+                document.getElementById('photoPlaceholder').style.display = 'none';
+            } else {
+                document.getElementById('photoImage').style.display = 'none';
+                document.getElementById('photoPlaceholder').style.display = 'block';
+            }
+
+            // স্বাক্ষর আপডেট
+            if (signatureDataURL) {
+                document.getElementById('signatureImage').setAttributeNS('http://www.w3.org/1999/xlink', 'href', signatureDataURL);
+                document.getElementById('signatureImage').style.display = 'block';
+                document.getElementById('signaturePlaceholder').style.display = 'none';
+            } else {
+                document.getElementById('signatureImage').style.display = 'none';
+                document.getElementById('signaturePlaceholder').style.display = 'block';
+            }
+        }
+
+        // PDF ডাউনলোড
+        async function downloadPDF() {
+            const svgElement = document.getElementById('nid-card-svg');
+            const bbox = svgElement.getBBox();
+            
+            try {
+                // SVG কে canvas এ রূপান্তর
+                const canvas = await html2canvas(svgElement, {
+                    scale: 3,
+                    backgroundColor: '#f7f2e9',
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true
+                });
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+                const idNo = document.getElementById('idNo').value || 'NID';
+                pdf.save(`NID_${idNo}.pdf`);
+            } catch (error) {
+                alert('PDF তৈরিতে ত্রুটি: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // পেজ লোড
+        window.addEventListener('load', updateSVG);
+    </script>
+</body>
+</html>
