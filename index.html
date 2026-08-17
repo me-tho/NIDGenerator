@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>জাতীয় পরিচয় পত্র ফর্ম ও জেনারেটর</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
+
+    <!-- jsPDF & html2canvas from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+    </script>
+
+    <style>
+        /* ===== রুট ভেরিয়েবল ===== */
+        :root {
+            --primary-green: #006a4e;
+            --govt-red: #f42a41;
+            --navy-blue: #005088;
+            --cream-bg: #f7f2e9;
+            --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            --border-gold: #b8860b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background: #e8ecf1;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ===== ফর্ম কন্টেইনার ===== */
+        .form-wrapper {
+            max-width: 1100px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px 35px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 45px;
+        }
+
+        .form-wrapper h1 {
+            text-align: center;
+            color: var(--primary-green);
+            font-size: 28px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .form-wrapper .sub-title {
+            text-align: center;
+            color: #4a5568;
+            font-size: 16px;
+            margin-bottom: 25px;
+            font-weight: 400;
+            border-bottom: 2px dashed #dce1e8;
+            padding-bottom: 15px;
+        }
+
+        /* ===== গ্রিড ফর্ম ===== */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px 28px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .form-group label small {
+            font-weight: 400;
+            color: #64748b;
+            font-size: 12px;
+            margin-left: 6px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 14px;
+            border: 1.8px solid #d1d9e6;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: 'Hind Siliguri', sans-serif;
+            background: #fafcfe;
+            transition: 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(0, 106, 78, 0.12);
+            background: #ffffff;
+        }
+
+        .form-group input::placeholder {
+            color: #aab3c5;
+            font-size: 14px;
+        }
+
+        /* ফাইল আপলোড */
+        .file-upload-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .file-upload-group input[type="file"] {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1.8px dashed #b3c2d6;
+            border-radius: 8px;
+            background: #f8fafc;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .file-upload-group input[type="file"]::file-selector-button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 6px;
+            background: var(--navy-blue);
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'Hind Siliguri', sans-serif;
+            margin-right: 10px;
+        }
+
+        .file-upload-group input[type="file"]::file-selector-button:hover {
+            background: #003d6b;
+        }
+
+        .file-hint {
+            font-size: 12px;
+            color: #6b7a93;
+            margin-top: 2px;
+        }
+
+        /* ===== জেনারেট বাটন ===== */
+        .btn-generate {
+            grid-column: span 2;
+            background: var(--primary-green);
+            color: white;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            font-family: 'Hind Siliguri', sans-serif;
+            transition: 0.2s;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0, 106, 78, 0.30);
+        }
+
+        .btn-generate:hover {
+            background: #00563e;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 106, 78, 0.35);
+        }
+
+        .btn-generate:active {
+            transform: translateY(0);
+        }
+
+        /* ===== NID কার্ড প্রিভিউ ===== */
+        .card-preview-wrapper {
+            max-width: 1100px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-preview-wrapper h2 {
+            font-size: 22px;
+            color: #1e293b;
+            margin-bottom: 18px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        /* ===== কার্ড ===== */
+        #nid-card {
+            width: 1000px;
+            min-height: 580px;
+            background: var(--cream-bg);
+            border: 6px solid var(--primary-green);
+            border-radius: 24px;
+            padding: 32px 38px 28px 38px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            font-family: 'Hind Siliguri', sans-serif;
+            transition: 0.15s;
+            margin-bottom: 30px;
+        }
+
+        /* অভ্যন্তরীণ সীমানা */
+        .card-inner-border {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            border: 2px solid rgba(0, 106, 78, 0.25);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+
+        /* ===== হেডার ===== */
+        .card-header {
+            text-align: center;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-header .govt-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: 0.8px;
+        }
+
+        .card-header .govt-text-en {
+            font-size: 12px;
+            font-weight: 400;
+            color: #3d3d5c;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .card-header .emblem-symbol {
+            font-size: 34px;
+            display: inline-block;
+            margin-right: 6px;
+            vertical-align: middle;
+            line-height: 1;
+        }
+
+        .card-title-area {
+            text-align: center;
+            margin: 4px 0 16px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-title-area .title-bn {
+            font-family: 'Tiro Bangla', serif;
+            font-size: 38px;
+            font-weight: 700;
+            color: var(--navy-blue);
+            letter-spacing: 1.5px;
+        }
+
+        .card-title-area .title-en {
+            font-size: 16px;
+            font-weight: 600;
+            color: #3d3d5c;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: -4px;
+        }
+
+        .title-underline {
+            width: 120px;
+            height: 3px;
+            background: var(--primary-green);
+            margin: 6px auto 0 auto;
+            border-radius: 4px;
+        }
+
+        /* ===== কন্টেন্ট এলাকা (ফটো + ইনফো) ===== */
+        .card-content {
+            display: flex;
+            gap: 30px;
+            position: relative;
+            z-index: 2;
+            margin-top: 6px;
+        }
+
+        /* বাম পাশ: তথ্য */
+        .info-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding-right: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: baseline;
+            padding: 3px 0;
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+        }
+
+        .info-row .label-bn {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a2e;
+            min-width: 110px;
+            flex-shrink: 0;
+        }
+
+        .info-row .label-en {
+            font-size: 11px;
+            font-weight: 400;
+            color: #5a5a7a;
+            min-width: 60px;
+            flex-shrink: 0;
+            margin-left: 2px;
+        }
+
+        .info-row .value-bn {
+            font-weight: 600;
+            font-size: 16px;
+            color: #0b2b3d;
+            word-break: break-word;
+            padding-left: 4px;
+            flex: 1;
+        }
+
+        .info-row .value-en {
+            font-size: 13px;
+            font-weight: 500;
+            color: #2d3d5c;
+            padding-left: 4px;
+            flex: 1;
+        }
+
+        .info-row .value-placeholder {
+            color: #aab3c5;
+            font-weight: 400;
+        }
+
+        /* ঠিকানা আলাদা স্টাইল */
+        .info-row.address-row {
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .info-row.address-row .value-bn {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        /* ===== ফটো এলাকা ===== */
+        .photo-area {
+            width: 185px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .photo-frame {
+            width: 100%;
+            aspect-ratio: 354 / 425;
+            /* 30×36mm 비율 */
+            background: #eef0f5;
+            border: 3px solid #2c3e4e;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-frame .photo-placeholder {
+            color: #8895aa;
+            font-size: 13px;
+            font-weight: 400;
+            text-align: center;
+            line-height: 1.5;
+            padding: 8px;
+        }
+
+        .photo-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #3d4e6a;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== সিগনেচার এলাকা ===== */
+        .signature-area {
+            margin-top: 12px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 25px;
+            position: relative;
+            z-index: 2;
+            padding-top: 6px;
+            border-top: 1.5px solid rgba(0, 0, 0, 0.07);
+        }
+
+        .sig-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sig-box .sig-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 2px;
+        }
+
+        .sig-box .sig-image {
+            height: 52px;
+            max-width: 200px;
+            border-bottom: 2px solid #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+        }
+
+        .sig-box .sig-image img {
+            max-height: 48px;
+            max-width: 190px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .sig-box .sig-image .sig-placeholder {
+            color: #aab3c5;
+            font-size: 13px;
+            font-weight: 300;
+        }
+
+        /* আইডি নম্বর বড় করে */
+        .id-big-row {
+            margin-top: 4px;
+            padding: 6px 0 2px 0;
+            border-top: 2px solid var(--primary-green);
+            border-bottom: 2px solid var(--primary-green);
+            background: rgba(0, 106, 78, 0.04);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 14px;
+            flex-wrap: wrap;
+        }
+
+        .id-big-row .id-label {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a2e;
+        }
+
+        .id-big-row .id-number {
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--navy-blue);
+            letter-spacing: 1.5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ===== প্রিন্ট/পিডিএফ বাটন ===== */
+        .btn-pdf {
+            background: var(--navy-blue);
+            color: #fff;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Hind Siliguri', sans-serif;
+            box-shadow: 0 4px 14px rgba(0, 80, 136, 0.30);
+            transition: 0.2s;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+        }
+
+        .btn-pdf:hover {
+            background: #003d6b;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 80, 136, 0.35);
+        }
+
+        .btn-pdf:active {
+            transform: translateY(0);
+        }
+
+        /* ===== রেস্পন্সিভ ===== */
+        @media (max-width: 1050px) {
+            #nid-card {
+                width: 100%;
+                min-height: auto;
+                padding: 22px 20px 20px 20px;
+            }
+
+            .card-content {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .photo-area {
+                width: 160px;
+                order: -1;
+            }
+
+            .info-area {
+                width: 100%;
+                padding-right: 0;
+            }
+
+            .info-row {
+                flex-wrap: wrap;
+                gap: 2px 6px;
+            }
+
+            .info-row .label-bn {
+                min-width: 80px;
+                font-size: 14px;
+            }
+
+            .info-row .label-en {
+                font-size: 10px;
+                min-width: 40px;
+            }
+
+            .info-row .value-bn {
+                font-size: 14px;
+            }
+
+            .card-title-area .title-bn {
+                font-size: 28px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width,
+            .btn-generate {
+                grid-column: span 1;
+            }
+
+            .form-wrapper {
+                padding: 20px 16px;
+            }
+
+            .id-big-row .id-number {
+                font-size: 17px;
+            }
+
+            .signature-area {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px 8px;
+            }
+
+            .form-wrapper {
+                padding: 16px 12px;
+            }
+
+            .form-wrapper h1 {
+                font-size: 20px;
+            }
+
+            .card-title-area .title-bn {
+                font-size: 22px;
+            }
+
+            .photo-area {
+                width: 130px;
+            }
+
+            .info-row .label-bn {
+                min-width: 60px;
+                font-size: 13px;
+            }
+
+            .info-row .value-bn {
+                font-size: 13px;
+            }
+
+            #nid-card {
+                padding: 14px 12px 14px 12px;
+                border-width: 4px;
+                border-radius: 16px;
+            }
+
+            .btn-generate,
+            .btn-pdf {
+                font-size: 17px;
+                padding: 12px 20px;
+            }
+        }
+
+        /* ===== লোডিং অ্যানিমেশন ===== */
+        .loading-dots::after {
+            content: '...';
+            animation: dots 1.2s steps(3, end) infinite;
+        }
+
+        @keyframes dots {
+            0% {
+                content: '';
+            }
+            33% {
+                content: '.';
+            }
+            66% {
+                content: '..';
+            }
+            100% {
+                content: '...';
+            }
+        }
+
+        /* ছোট হেল্পার */
+        .mt-1 {
+            margin-top: 6px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-muted {
+            color: #6b7a93;
+            font-size: 13px;
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================== -->
+    <!-- ফর্ম সেকশন -->
+    <!-- ============================== -->
+    <div class="form-wrapper">
+        <h1>🇧🇩 জাতীয় পরিচয় পত্র ফর্ম</h1>
+        <p class="sub-title">নিচের ঘরগুলো পূরণ করুন — ডান পাশে লাইভ প্রিভিউ দেখুন</p>
+
+        <div class="form-grid">
+
+            <!-- নাম (বাংলা) -->
+            <div class="form-group">
+                <label>নাম <small>(বাংলা)</small></label>
+                <input type="text" id="fNameBn" placeholder="যেমন: মাহফুজ আলী" oninput="updateCard()">
+            </div>
+            <!-- নাম (ইংরেজি) -->
+            <div class="form-group">
+                <label>Name <small>(English)</small></label>
+                <input type="text" id="fNameEn" placeholder="e.g. MAHFUZ ALI" oninput="updateCard()">
+            </div>
+
+            <!-- পিতা (বাংলা) -->
+            <div class="form-group">
+                <label>পিতা <small>(বাংলা)</small></label>
+                <input type="text" id="fFatherBn" placeholder="যেমন: আলীম উদ্দীন" oninput="updateCard()">
+            </div>
+            <!-- পিতা (ইংরেজি) -->
+            <div class="form-group">
+                <label>Father <small>(English)</small></label>
+                <input type="text" id="fFatherEn" placeholder="e.g. ALIM UDDIN" oninput="updateCard()">
+            </div>
+
+            <!-- মাতা (বাংলা) -->
+            <div class="form-group">
+                <label>মাতা <small>(বাংলা)</small></label>
+                <input type="text" id="fMotherBn" placeholder="যেমন: ময়না খাতুন" oninput="updateCard()">
+            </div>
+            <!-- মাতা (ইংরেজি) -->
+            <div class="form-group">
+                <label>Mother <small>(English)</small></label>
+                <input type="text" id="fMotherEn" placeholder="e.g. MOYNA KHATUN" oninput="updateCard()">
+            </div>
+
+            <!-- জন্ম তারিখ -->
+            <div class="form-group">
+                <label>জন্ম তারিখ <small>(Date of Birth)</small></label>
+                <input type="date" id="fDob" oninput="updateCard()">
+            </div>
+            <!-- আইডি নম্বর -->
+            <div class="form-group">
+                <label>আইডি নং <small>(ID NO)</small></label>
+                <input type="text" id="fIdNo" placeholder="যেমন: 4654113754" oninput="updateCard()">
+            </div>
+
+            <!-- ঠিকানা (বাংলা) -->
+            <div class="form-group full-width">
+                <label>ঠিকানা <small>(Address — বাংলা)</small></label>
+                <input type="text" id="fAddressBn" placeholder="যেমন: কুমপুর, রিশখালী, ডাকঘর: রিশখালী - ৭৩১০, হিরণাপাড়া, ঝিনাইদহ" oninput="updateCard()">
+            </div>
+
+            <!-- রক্তের গ্রুপ -->
+            <div class="form-group">
+                <label>রক্তের গ্রুপ <small>(Blood Group)</small></label>
+                <input type="text" id="fBlood" placeholder="যেমন: O+" oninput="updateCard()">
+            </div>
+            <!-- জন্মস্থান -->
+            <div class="form-group">
+                <label>জন্মস্থান <small>(Birthplace)</small></label>
+                <input type="text" id="fBirthplace" placeholder="যেমন: ঝিনাইদহ" oninput="updateCard()">
+            </div>
+
+            <!-- প্রদানের তারিখ -->
+            <div class="form-group">
+                <label>প্রদানের তারিখ <small>(Issue Date)</small></label>
+                <input type="date" id="fIssueDate" oninput="updateCard()">
+            </div>
+            <!-- (খালি ঘর) -->
+            <div class="form-group"></div>
+
+            <!-- ছবি আপলোড -->
+            <div class="form-group full-width">
+                <label>ছবি <small>(Photo) — ৩০×৩৬ মিমি (৩৫৪×৪২৫ পিক্সেল at 300 DPI)</small></label>
+                <div class="file-upload-group">
+                    <input type="file" id="fPhoto" accept="image/*" onchange="handlePhoto(event)">
+                    <span class="file-hint">JPG, PNG</span>
+                </div>
+            </div>
+
+            <!-- স্বাক্ষর আপলোড -->
+            <div class="form-group full-width">
+                <label>স্বাক্ষর <small>(Signature) — ৩০০×৮০ পিক্সেল</small></label>
+                <div class="file-upload-group">
+                    <input type="file" id="fSignature" accept="image/*" onchange="handleSignature(event)">
+                    <span class="file-hint">JPG, PNG, স্বচ্ছ ব্যাকগ্রাউন্ড ভালো</span>
+                </div>
+            </div>
+
+            <!-- জেনারেট বাটন -->
+            <button class="btn-generate" onclick="generatePDF()">
+                📄 পিডিএফ তৈরি করুন (PDF Generate)
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================== -->
+    <!-- NID কার্ড প্রিভিউ -->
+    <!-- ============================== -->
+    <div class="card-preview-wrapper">
+        <h2>🔍 লাইভ প্রিভিউ — জাতীয় পরিচয় পত্র</h2>
+
+        <div id="nid-card">
+            <div class="card-inner-border"></div>
+
+            <!-- হেডার -->
+            <div class="card-header">
+                <div class="govt-text">
+                    <span class="emblem-symbol">🇧🇩</span>
+                    গণপ্রজাতন্ত্রী বাংলাদেশ সরকার
+                </div>
+                <div class="govt-text-en">Government of the People's Republic of Bangladesh</div>
+            </div>
+
+            <!-- টাইটেল -->
+            <div class="card-title-area">
+                <div class="title-bn">জাতীয় পরিচয় পত্র</div>
+                <div class="title-en">National Identity Card</div>
+                <div class="title-underline"></div>
+            </div>
+
+            <!-- কন্টেন্ট -->
+            <div class="card-content">
+                <!-- বাম: তথ্য -->
+                <div class="info-area">
+
+                    <!-- নাম -->
+                    <div class="info-row">
+                        <span class="label-bn">নাম</span>
+                        <span class="label-en">Name</span>
+                        <span class="value-bn" id="pvNameBn">________</span>
+                        <span class="value-en" id="pvNameEn">________</span>
+                    </div>
+
+                    <!-- পিতা -->
+                    <div class="info-row">
+                        <span class="label-bn">পিতা</span>
+                        <span class="label-en">Father</span>
+                        <span class="value-bn" id="pvFatherBn">________</span>
+                        <span class="value-en" id="pvFatherEn">________</span>
+                    </div>
+
+                    <!-- মাতা -->
+                    <div class="info-row">
+                        <span class="label-bn">মাতা</span>
+                        <span class="label-en">Mother</span>
+                        <span class="value-bn" id="pvMotherBn">________</span>
+                        <span class="value-en" id="pvMotherEn">________</span>
+                    </div>
+
+                    <!-- জন্ম তারিখ -->
+                    <div class="info-row">
+                        <span class="label-bn">জন্ম তারিখ</span>
+                        <span class="label-en">DOB</span>
+                        <span class="value-bn" id="pvDobBn">—</span>
+                        <span class="value-en" id="pvDobEn">—</span>
+                    </div>
+
+                    <!-- জন্মস্থান -->
+                    <div class="info-row">
+                        <span class="label-bn">জন্মস্থান</span>
+                        <span class="label-en">Birthplace</span>
+                        <span class="value-bn" id="pvBirthplace">________</span>
+                    </div>
+
+                    <!-- রক্তের গ্রুপ -->
+                    <div class="info-row">
+                        <span class="label-bn">রক্তের গ্রুপ</span>
+                        <span class="label-en">Blood</span>
+                        <span class="value-bn" id="pvBlood">________</span>
+                    </div>
+
+                    <!-- ঠিকানা -->
+                    <div class="info-row address-row">
+                        <span class="label-bn">ঠিকানা</span>
+                        <span class="label-en">Address</span>
+                        <span class="value-bn" id="pvAddress">________</span>
+                    </div>
+
+                    <!-- প্রদানের তারিখ -->
+                    <div class="info-row">
+                        <span class="label-bn">প্রদানের তারিখ</span>
+                        <span class="label-en">Issue Date</span>
+                        <span class="value-bn" id="pvIssueBn">—</span>
+                        <span class="value-en" id="pvIssueEn">—</span>
+                    </div>
+
+                    <!-- আইডি নম্বর (বড়) -->
+                    <div class="id-big-row">
+                        <span class="id-label">আইডি নং / ID NO</span>
+                        <span class="id-number" id="pvIdBig">________</span>
+                    </div>
+                </div>
+
+                <!-- ডান: ফটো -->
+                <div class="photo-area">
+                    <div class="photo-frame" id="photoFrame">
+                        <div class="photo-placeholder" id="photoPlaceholder">
+                            📷<br>ছবি<br><span style="font-size:11px;">Photo</span>
+                        </div>
+                        <img id="photoImg" style="display:none;" alt="Photo">
+                    </div>
+                    <div class="photo-label">ছবি / Photo</div>
+                </div>
+            </div>
+
+            <!-- স্বাক্ষর -->
+            <div class="signature-area">
+                <div class="sig-box">
+                    <span class="sig-label">স্বাক্ষর / Signature</span>
+                    <div class="sig-image" id="sigContainer">
+                        <span class="sig-placeholder" id="sigPlaceholder">(স্বাক্ষর দিন)</span>
+                        <img id="sigImg" style="display:none;" alt="Signature">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PDF বাটন (নিচে) -->
+        <button class="btn-pdf" onclick="generatePDF()">
+            ⬇️ পিডিএফ ডাউনলোড করুন (PDF)
+        </button>
+        <p style="margin-top:12px; font-size:14px; color:#6b7a93;">
+            PDF জেনারেট করতে html2canvas + jsPDF ব্যবহার করা হয়েছে। সব ডেটা লোকালি প্রসেস হয়।
+        </p>
+    </div>
+
+    <!-- ============================== -->
+    <!-- জাভাস্ক্রিপ্ট -->
+    <!-- ============================== -->
+    <script>
+        // ---- গ্লোবাল ভেরিয়েবল ----
+        let photoDataURL = null;
+        let sigDataURL = null;
+
+        // ---- হ্যান্ডেল: ফটো আপলোড ----
+        function handlePhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                photoDataURL = e.target.result;
+                const img = document.getElementById('photoImg');
+                const placeholder = document.getElementById('photoPlaceholder');
+                img.src = photoDataURL;
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ---- হ্যান্ডেল: স্বাক্ষর আপলোড ----
+        function handleSignature(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                sigDataURL = e.target.result;
+                const img = document.getElementById('sigImg');
+                const placeholder = document.getElementById('sigPlaceholder');
+                img.src = sigDataURL;
+                img.style.display = 'block';
+                placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ---- ইউটিলিটি: বাংলা তারিখ ফরম্যাট ----
+        function formatDateBn(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '—';
+            const months = ['জানু', 'ফেব্রু', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+                'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+            ];
+            const day = d.getDate();
+            const month = months[d.getMonth()];
+            const year = d.getFullYear();
+            return `${day} ${month} ${year}`;
+        }
+
+        function formatDateEn(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '—';
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+            ];
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = months[d.getMonth()];
+            const year = d.getFullYear();
+            return `${day} ${month} ${year}`;
+        }
+
+        // ---- কার্ড আপডেট ----
+        function updateCard() {
+            // নাম
+            const nameBn = document.getElementById('fNameBn').value || '________';
+            const nameEn = document.getElementById('fNameEn').value || '________';
+            document.getElementById('pvNameBn').textContent = nameBn;
+            document.getElementById('pvNameEn').textContent = nameEn;
+
+            // পিতা
+            const fBn = document.getElementById('fFatherBn').value || '________';
+            const fEn = document.getElementById('fFatherEn').value || '________';
+            document.getElementById('pvFatherBn').textContent = fBn;
+            document.getElementById('pvFatherEn').textContent = fEn;
+
+            // মাতা
+            const mBn = document.getElementById('fMotherBn').value || '________';
+            const mEn = document.getElementById('fMotherEn').value || '________';
+            document.getElementById('pvMotherBn').textContent = mBn;
+            document.getElementById('pvMotherEn').textContent = mEn;
+
+            // জন্ম তারিখ
+            const dob = document.getElementById('fDob').value;
+            document.getElementById('pvDobBn').textContent = formatDateBn(dob);
+            document.getElementById('pvDobEn').textContent = formatDateEn(dob);
+
+            // জন্মস্থান
+            document.getElementById('pvBirthplace').textContent =
+                document.getElementById('fBirthplace').value || '________';
+
+            // রক্তের গ্রুপ
+            document.getElementById('pvBlood').textContent =
+                document.getElementById('fBlood').value || '________';
+
+            // ঠিকানা
+            document.getElementById('pvAddress').textContent =
+                document.getElementById('fAddressBn').value || '________';
+
+            // প্রদানের তারিখ
+            const issue = document.getElementById('fIssueDate').value;
+            document.getElementById('pvIssueBn').textContent = formatDateBn(issue);
+            document.getElementById('pvIssueEn').textContent = formatDateEn(issue);
+
+            // আইডি নম্বর
+            const idNo = document.getElementById('fIdNo').value || '________';
+            document.getElementById('pvIdBig').textContent = idNo;
+
+            // ফটো (ইতিমধ্যে handlePhoto এ আপডেট হয়)
+            // স্বাক্ষর (ইতিমধ্যে handleSignature এ আপডেট হয়)
+        }
+
+        // ---- প্রাথমিক রেন্ডার ----
+        updateCard();
+
+        // ---- PDF জেনারেট ----
+        function generatePDF() {
+            const btn = document.querySelector('.btn-generate') || document.querySelector('.btn-pdf');
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ জেনারেট হচ্ছে ...';
+            btn.disabled = true;
+
+            const card = document.getElementById('nid-card');
+
+            // html2canvas দিয়ে কার্ড ক্যাপচার
+            html2canvas(card, {
+                scale: 2.5, // উচ্চ রেজোলিউশন
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#f7f2e9',
+                logging: false,
+                width: 1000,
+                height: card.scrollHeight,
+                windowWidth: 1000,
+            }).then((canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+
+                // A4 landscape (297mm × 210mm)
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('l', 'mm', 'a4');
+                const pdfWidth = 297;
+                const pdfHeight = 210;
+
+                // ইমেজের অনুপাত ঠিক রাখা
+                const imgAspect = canvas.width / canvas.height;
+                let finalWidth, finalHeight;
+
+                if (imgAspect > (pdfWidth / pdfHeight)) {
+                    finalWidth = pdfWidth - 20;
+                    finalHeight = finalWidth / imgAspect;
+                } else {
+                    finalHeight = pdfHeight - 20;
+                    finalWidth = finalHeight * imgAspect;
+                }
+
+                const x = (pdfWidth - finalWidth) / 2;
+                const y = (pdfHeight - finalHeight) / 2;
+
+                pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+                pdf.save('জাতীয়_পরিচয়_পত্র.pdf');
+
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }).catch((err) => {
+                console.error('PDF generation error:', err);
+                btn.textContent = '❌ ত্রুটি! আবার চেষ্টা করুন';
+                btn.disabled = false;
+                alert('PDF তৈরি করতে সমস্যা হয়েছে। কনসোল চেক করুন।');
+            });
+        }
+
+        // ---- এন্টার চাপলে ফর্ম সাবমিট না ----
+        document.querySelectorAll('input').forEach(inp => {
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') e.preventDefault();
+            });
+        });
+    </script>
+
+</body>
+</html>
